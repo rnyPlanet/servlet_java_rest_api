@@ -3,15 +3,18 @@ package dao.repository;
 import dao.models.User;
 import dao.models.dto.NewUser;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository {
-    String create(NewUser user);
+    String create(NewUser user) throws SQLException;
 
-    List<User> getAll();
+    User update(User user) throws SQLException;
 
-    Optional<User> findById(String id);
+    List<User> getAll() throws SQLException;
 
-    void deleteById(String id);
+    Optional<User> findById(String id) throws SQLException;
+
+    void deleteById(String id) throws SQLException;
 }

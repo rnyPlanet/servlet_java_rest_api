@@ -24,6 +24,7 @@ public abstract class AbsServlet extends HttpServlet {
 
     protected <T> void writeResponse(HttpServletResponse resp, T body) throws IOException {
         resp.setContentType(APPLICATION_JSON);
+        resp.setCharacterEncoding("UTF-8");
 
         PrintWriter out = resp.getWriter();
 

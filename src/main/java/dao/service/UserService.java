@@ -3,14 +3,17 @@ package dao.service;
 import dao.models.User;
 import dao.models.dto.NewUser;
 
+import java.sql.SQLException;
 import java.util.List;
 
 public interface UserService {
-    String create(NewUser user);
+    String create(NewUser user) throws SQLException;
 
-    List<User> getAll();
+    User update(User user) throws SQLException;
 
-    User findById(String id);
+    List<User> getAll() throws SQLException;
 
-    void deleteById(String id);
+    User findById(String id) throws SQLException;
+
+    void deleteById(String id) throws SQLException;
 }

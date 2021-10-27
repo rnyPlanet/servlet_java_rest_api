@@ -11,6 +11,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet(urlPatterns = {"/api/users/*"})
 public class UserServlet extends AbsServlet {
@@ -19,11 +23,20 @@ public class UserServlet extends AbsServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String id = req.getParameter("id");
         if (id != null) {
-            resp.setStatus(StatusCode.OK.getCode());
-            super.writeResponse(resp, userService.findById(id));
+
+            try {
+                resp.setStatus(StatusCode.OK.getCode());
+                super.writeResponse(resp, userService.findById(id));
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         } else {
-            resp.setStatus(StatusCode.OK.getCode());
-            super.writeResponse(resp, userService.getAll());
+            try {
+                resp.setStatus(StatusCode.OK.getCode());
+                super.writeResponse(resp, userService.getAll());
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
     }
 
@@ -36,20 +49,28 @@ public class UserServlet extends AbsServlet {
                 .password(registrationRequest.getPassword())
                 .build();
 
-        String userId = userService.create(user);
+        try {
+            String userId = userService.create(user);
 
-        resp.setStatus(StatusCode.CREATED.getCode());
-        super.writeResponse(resp, new RegistrationResponse(userId));
+            resp.setStatus(StatusCode.CREATED.getCode());
+            super.writeResponse(resp, new RegistrationResponse(userId));
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String id = req.getParameter("id");
         if (id != null) {
-            userService.deleteById(id);
+            try {
+                userService.deleteById(id);
 
-            resp.setStatus(StatusCode.OK.getCode());
-            super.writeResponse(resp, "");
+                resp.setStatus(StatusCode.OK.getCode());
+                super.writeResponse(resp, "");
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
     }
 
@@ -57,19 +78,27 @@ public class UserServlet extends AbsServlet {
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String id = req.getParameter("id");
         if (id != null) {
-            User user = userService.findById(id);
-            req.getParameterMap().forEach((k, v) -> {
-                try {
-                    Field field = user.getClass().getDeclaredField(k);
-                    field.setAccessible(true);
-                    field.set(user, v[0]);
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            });
+            try {
+                User user = userService.findById(id);
+                RegistrationRequest registrationRequest = super.readRequest(req.getReader(), RegistrationRequest.class);
 
-            resp.setStatus(StatusCode.OK.getCode());
-            super.writeResponse(resp, userService.findById(id));
+                for (Field field : registrationRequest.getClass().getDeclaredFields()) {
+                    field.setAccessible(true);
+
+                    Field userField = user.getClass().getDeclaredField(field.getName());
+                    userField.setAccessible(true);
+                    Object value = field.get(registrationRequest);
+                    userField.set(user, value);
+                }
+
+                userService.update(user);
+
+                resp.setStatus(StatusCode.OK.getCode());
+                super.writeResponse(resp, userService.findById(id));
+
+            } catch (NoSuchFieldException | IllegalAccessException | SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
     }
 }

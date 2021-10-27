@@ -24,13 +24,14 @@ public class ErrorServlet extends AbsServlet {
         Integer statusCode = (Integer) req.getAttribute("javax.servlet.error.status_code");
         String message = (String) req.getAttribute("javax.servlet.error.message");
         String requestUri = (String) req.getAttribute("javax.servlet.error.request_uri");
+        Exception exception = (Exception) req.getAttribute("javax.servlet.error.exception");
 
         super.writeResponse(
                 resp,
                 errorResponseBuilder
                     .code(statusCode)
                     .uri(requestUri)
-                    .message(message)
+                    .message(exception.getMessage())
                     .build()
         );
     }
